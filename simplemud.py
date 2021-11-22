@@ -30,7 +30,11 @@ from termcolor import colored
 from mudserver import MudServer
 
 from poff_mud.gamestate import GameState
-from poff_mud.commands import LookCommand, MoveCommand, SayCommand
+
+from poff_mud.commands.look import LookCommand
+from poff_mud.commands.move import MoveCommand
+from poff_mud.commands.say import SayCommand
+
 from poff_mud.login_screen import send_login_welcome
 from poff_mud.timer import TimerManager
 
