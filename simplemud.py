@@ -29,10 +29,10 @@ from termcolor import colored
 # import the MUD server class
 from mudserver import MudServer
 
-from gamestate import GameState
-from commands import LookCommand, MoveCommand, SayCommand
-from login_screen import send_login_welcome
-from timer import TimerManager
+from poff_mud.gamestate import GameState
+from poff_mud.commands import LookCommand, MoveCommand, SayCommand
+from poff_mud.login_screen import send_login_welcome
+from poff_mud.timer import TimerManager
 
 if __name__ == "__main__":
     # setup game state

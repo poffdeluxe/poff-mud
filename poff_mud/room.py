@@ -1,5 +1,5 @@
 from enum import Enum
-from file_helpers import (
+from poff_mud.file_helpers import (
     read_number,
     read_string,
     read_flagset,

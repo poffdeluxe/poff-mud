@@ -1,5 +1,5 @@
 from copy import deepcopy
-from file_helpers import read_number, read_string, read_flagset, read_until_tilde
+from poff_mud.file_helpers import read_number, read_string, read_flagset, read_until_tilde
 
 specific_to_general_damage = {
     "bite": "pierce",

@@ -1,6 +1,7 @@
 import copy
-from mobile import Mobile
-from room import Room
+
+from poff_mud.mobile import Mobile
+from poff_mud.room import Room
 
 
 def peek_next_line(fp):

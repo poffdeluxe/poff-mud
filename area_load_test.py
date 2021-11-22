@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from area import Area
+from poff_mud.area import Area
 
 if __name__ == "__main__":
     with open("areas/school.are") as fp:
