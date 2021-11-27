@@ -1,6 +1,7 @@
-from .base_command import BaseCommand
+from poff_mud.room import exit_shorthand_to_dir
+from poff_mud.room_utils import get_room_display_str
 
-shorthand_to_dir = {"n": "north", "s": "south", "w": "west", "e": "east"}
+from .base_command import BaseCommand
 
 
 class MoveCommand(BaseCommand):
@@ -31,10 +32,10 @@ class MoveCommand(BaseCommand):
         # store the player's current room
         rm = self.gs.rooms[player["room"]]
 
-        ex = shorthand_to_dir.get(ex, ex)
+        ex = exit_shorthand_to_dir.get(ex, ex)
 
         # if the specified exit is found in the room's exits list
-        if ex in rm["exits"]:
+        if ex in rm.exits:
 
             # go through all the gs.players in the game
             for pid, pl in self.gs.players.items():
@@ -49,7 +50,7 @@ class MoveCommand(BaseCommand):
                     yield "{} left via exit '{}'".format(player["name"], ex)
 
             # update the player's current room to the one the exit leads to
-            player["room"] = rm["exits"][ex]
+            player["room"] = rm.exits[ex]["exit_vnum"]
             rm = self.gs.rooms[player["room"]]
 
             # go through all the players in the game
@@ -67,7 +68,7 @@ class MoveCommand(BaseCommand):
                     )
 
             # send the player a message telling them where they are now
-            yield "You arrive at '{}'".format(player["room"])
+            yield get_room_display_str(rm, player, self.gs)
 
         # the specified exit wasn't found in the current room
         else:

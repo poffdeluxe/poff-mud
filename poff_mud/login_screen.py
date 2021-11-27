@@ -1,4 +1,4 @@
-from termcolor import colored, cprint
+from termcolor import colored
 
 welcome = [
     " ____   __  ____  ____  _  _  _  _  ____ ",

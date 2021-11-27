@@ -1,5 +1,15 @@
+from enum import Enum
 from copy import deepcopy
-from poff_mud.file_helpers import read_number, read_string, read_flagset, read_until_tilde
+
+from poff_mud.file_helpers import (
+    read_number,
+    read_string,
+    read_flagset,
+    read_until_tilde,
+)
+from poff_mud.character import Character
+from poff_mud.copyable import Copyable
+from poff_mud.airv import IRVFlag
 
 specific_to_general_damage = {
     "bite": "pierce",
@@ -49,8 +59,9 @@ code_to_act_flag = {
     "F": "aggressive",  # Mobile attacks any character in the same room (see the section dealing with aggression)
     "G": "stay area",  # Mobile will not, leave a zone (this should be set)
     "H": "wimpy",  # Mobile will fly when badly hurt
-    "J": "pet",  # Mobile is a pet (and hence safe from attack)
-    "K": "train",  # Mobile can train statistics
+    "I": "pet",  # Mobile is a pet (and hence safe from attack)
+    "J": "train",  # Mobile can train statistics
+    "K": "practice",  # Mobile can practice statistics
     "O": "undead",  # Mobile has special undead powers (i.e. life draining)
     "Q": "cleric",  # Mobile has cleric casting powers
     "R": "mage",  # Mobile has mage casting powers
@@ -110,32 +121,6 @@ code_to_offensive_flag = {
     "S": "players",  # Mobile will assist players (by race/alignment)
     "T": "guard",  # Mobile assists as a cityguard
     "U": "vnum",  # Mobile assists mobiles of the same number only
-}
-
-code_to_irv_flag = {
-    "A": "summon",  # Summoning and gating magic
-    "B": "charm",  # Charm spells (the beguiling spell group)
-    "C": "magic",  # All magic (be very careful using this flag)
-    "D": "weapons",  # All physical attacks (be very careful using this flag)
-    "E": "bash",  # Blunt weapons
-    "F": "pierce",  # Piercing weapons
-    "G": "slash",  # Slashing weapons
-    "H": "fire",  # Flame and heat attacks and spells
-    "I": "cold",  # Cold and ice attacks and spells
-    "J": "lightning",  # Electrical attacks and spells
-    "K": "acid",  # Corrosive attacks and spells
-    "L": "poison",  # Venoms and toxic vapors
-    "M": "negative",  # Life draining attacks and spells, or unholy energies
-    "N": "holy",  # Holy or blessed attacks
-    "O": "energy",  # Generic magical force (i.e. magic missile)
-    "P": "mental",  # Mental attacks (such as a mind flayer's mind blasts)
-    "Q": "disease",  # Disease, from the common cold to the black death
-    "R": "drowning",  # Watery attacks and suffocation
-    "S": "light",  # Light-based attacks, whether blinding or cutting
-    "T": "sound",  # Sonic attacks and weapons, or deafening noises
-    "X": "wood",  # Wooden weapons and creatures
-    "Y": "silver",  # Silver or mithril weapons and creatures
-    "Z": "iron",  # Iron and steel weapons and creatures
 }
 
 code_to_form_flag = {
@@ -211,8 +196,10 @@ code_to_parts_flag = {
 # 0 <form flags> 0 <part flags> medium <size> 0 <material>
 
 
-class Mobile:
+class Mobile(Copyable, Character):
     def __init__(self):
+        Character.__init__(self)
+
         self.vnum = ""
         # self.id = uuid
 
@@ -266,18 +253,6 @@ class Mobile:
     def has_act_flag(self, act_flag):
         return act_flag in self.act_flags
 
-    def __deepcopy__(self, memo):
-        cls = self.__class__  # Extract the class of the object
-        result = cls.__new__(
-            cls
-        )  # Create a new instance of the object based on extracted class
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            setattr(
-                result, k, deepcopy(v, memo)
-            )  # Copy over attributes by copying directly or in case of complex objects like lists for exaample calling the `__deepcopy()__` method defined by them. Thus recursively copying the whole tree of objects.
-        return result
-
     @classmethod
     def load_from_file(cls, fp):
         mob = cls()
@@ -297,6 +272,8 @@ class Mobile:
 
         mob.race = read_until_tilde(fp)
 
+        # TODO: act and affect (and maybe other flags) are affected by
+        # race
         raw_act_flags = read_flagset(fp)
         for flag_code in raw_act_flags:
             mob.act_flags.append(code_to_act_flag[flag_code])
@@ -327,15 +304,15 @@ class Mobile:
 
         raw_imm_flags = read_flagset(fp)
         for flag_code in raw_imm_flags:
-            mob.immunity_flags.append(code_to_irv_flag[flag_code])
+            mob.immunity_flags.append(IRVFlag(flag_code))
 
         raw_res_flags = read_flagset(fp)
         for flag_code in raw_res_flags:
-            mob.resistance_flags.append(code_to_irv_flag[flag_code])
+            mob.resistance_flags.append(IRVFlag(flag_code))
 
         raw_vul_flags = read_flagset(fp)
         for flag_code in raw_vul_flags:
-            mob.vulnerability_flags.append(code_to_irv_flag[flag_code])
+            mob.vulnerability_flags.append(IRVFlag(flag_code))
 
         mob.start_pos = read_string(fp)
         mob.default_pos = read_string(fp)

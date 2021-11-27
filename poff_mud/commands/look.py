@@ -1,3 +1,7 @@
+from termcolor import colored
+
+from poff_mud.room import code_to_direction, exit_shorthand_to_dir
+from poff_mud.room_utils import get_room_display_str
 from .base_command import BaseCommand
 
 
@@ -9,24 +13,29 @@ class LookCommand(BaseCommand):
         # store the player's current room
         rm = self.gs.rooms[player["room"]]
 
-        # send the player back the description of their current room
-        yield rm["description"]
+        if params:
+            # TODO: Look at mobs
+            # TODO: Look at players
 
-        playershere = []
-        # go through every player in the game
-        for pid, pl in self.gs.players.items():
-            # if they're in the same room as the player
-            if self.gs.players[pid]["room"] == player["room"]:
-                # ... and they have a name to be shown
-                if self.gs.players[pid]["name"] is not None:
-                    # add their name to the list
-                    playershere.append(self.gs.players[pid]["name"])
+            # Look items in room (extra)
+            if params in rm.extra:
+                yield rm.extra[params]
+                return
 
-        # send player a message containing the list of players in the room
-        yield "Players here: {}".format(", ".join(playershere))
+            # Look direction
+            if params in code_to_direction or params in exit_shorthand_to_dir.keys():
+                direction = exit_shorthand_to_dir.get(params, params)
 
-        # send player a message containing the list of exits from this room
-        yield "Exits are: {}".format(", ".join(rm["exits"]))
+                if direction in rm.exits:
+                    yield rm.exits[direction]["look_description"]
+                    # TODO: show door state too
+                    return
+
+            yield f"There's nothing called '{params}' to look at here..."
+            return
+
+        # No params so look in room
+        yield get_room_display_str(rm, player, self.gs)
 
     @property
     def help(self):

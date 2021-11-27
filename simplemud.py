@@ -1,26 +1,5 @@
 #!/usr/bin/env python
 
-"""A simple Multi-User Dungeon (MUD) game. Players can talk to each
-other, examine their surroundings and move between rooms.
-
-Some ideas for things to try adding:
-    * More rooms to explore
-    * An 'emote' command e.g. 'emote laughs out loud' -> 'Mark laughs
-        out loud'
-    * A 'whisper' command for talking to individual players
-    * A 'shout' command for yelling to players in all rooms
-    * Items to look at in rooms e.g. 'look fireplace' -> 'You see a
-        roaring, glowing fire'
-    * Items to pick up e.g. 'take rock' -> 'You pick up the rock'
-    * Monsters to fight
-    * Loot to collect
-    * Saving players accounts between sessions
-    * A password login
-    * A shop from which to buy items
-
-author: Mark Frimston - mfrimston@gmail.com
-"""
-
 import time
 from signal import signal, SIGINT
 from sys import exit
@@ -29,28 +8,39 @@ from termcolor import colored
 # import the MUD server class
 from mudserver import MudServer
 
+from poff_mud.spawn_pool import SpawnPool
 from poff_mud.gamestate import GameState
-
-from poff_mud.commands.look import LookCommand
-from poff_mud.commands.move import MoveCommand
-from poff_mud.commands.say import SayCommand
-
+from poff_mud.commands import LookCommand, MoveCommand, SayCommand
 from poff_mud.login_screen import send_login_welcome
 from poff_mud.timer import TimerManager
 
+from poff_mud.area import Area
+from poff_mud.room_utils import get_room_display_str
+
 if __name__ == "__main__":
-    # setup game state
+    # Create the global spawn pool
+    gsp = SpawnPool()
+
+    areas = []
+
+    # Load in school
+    with open("areas/school.are") as fp:
+        school_area = Area.load_from_file(fp, gsp=gsp)
+        areas.append(school_area)
+
+    # Load in midgaard
+    with open("areas/midgaard.are") as fp:
+        midgaard_area = Area.load_from_file(fp, gsp=gsp)
+        areas.append(midgaard_area)
+
+    # setup game state and add rooms 
     gs = GameState()
-    gs.rooms = {
-        "Tavern": {
-            "description": "You're in a cozy tavern warmed by an open fire.",
-            "exits": {"outside": "Outside"},
-        },
-        "Outside": {
-            "description": "You're standing outside a tavern. It's raining.",
-            "exits": {"inside": "Tavern"},
-        },
-    }
+    gs.rooms = {}
+    for a in areas:
+        for room_vnum in a.rooms:
+            gs.rooms[room_vnum] = a.rooms[room_vnum]
+
+        a.reset(gsp)
 
     # stores the players in the game
     gs.players = {}
@@ -154,7 +144,7 @@ if __name__ == "__main__":
                 if gs.players[id]["name"] is None:
 
                     gs.players[id]["name"] = command
-                    gs.players[id]["room"] = "Tavern"
+                    gs.players[id]["room"] = "3700"
 
                     # go through all the players in the game
                     for pid, pl in gs.players.items():
@@ -167,13 +157,12 @@ if __name__ == "__main__":
                     mud.send_message(
                         id,
                         "Welcome to the game, {}. ".format(gs.players[id]["name"])
-                        + "Type 'help' for a list of commands. Have fun!",
+                        + "Type 'help' for a list of commands. Have fun!\n",
                     )
 
                     # send the new player the description of their current room
-                    mud.send_message(
-                        id, gs.rooms[gs.players[id]["room"]]["description"]
-                    )
+                    rm = gs.rooms[gs.players[id]["room"]]
+                    mud.send_message(id, get_room_display_str(rm, gs.players[id], gs))
 
                 elif command in commands_lookup:
                     c = commands_lookup[command]
