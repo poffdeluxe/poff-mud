@@ -14,7 +14,20 @@ class LookCommand(BaseCommand):
         rm = self.gs.rooms[player["room"]]
 
         if params:
-            # TODO: Look at mobs
+            # Look at mobs
+            for m in rm.mobs:
+                for kw in m.keywords:
+                    if params == kw:
+                        yield m.look_desc
+                        return
+
+            # Look at objects
+            for o in rm.objects:
+                for kw in o.extra_description:
+                    if params == kw:
+                        yield o.extra_description[kw]
+                        return
+
             # TODO: Look at players
 
             # Look items in room (extra)

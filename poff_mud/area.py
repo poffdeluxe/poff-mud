@@ -248,8 +248,11 @@ class Area:
                     last = None
             elif reset["action"] == ResetAction.SET_DOOR:
                 room_vnum = values[1]
+                direction = code_to_direction[int(values[2])]
+                door_state = DoorState(int(values[3]))
+
                 rm = self.rooms[room_vnum]
-                rm.exits[code_to_direction[int(values[2])]] = DoorState(int(values[3]))
+                rm.exits[direction]['door_state'] = door_state
 
             last_reset = reset
 
