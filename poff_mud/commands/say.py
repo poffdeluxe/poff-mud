@@ -10,7 +10,7 @@ class SayCommand(BaseCommand):
         for p in self.gs.get_players_in_room(player["room"]):
             if p["id"] != player["id"]:
                 # send them a message telling them what the player said
-                self.mud.send_message(pid, "{} says: {}".format(player["name"], params))
+                self.mud.send_message(p["id"], "{} says: {}".format(player["name"], params))
 
         yield ""
 
